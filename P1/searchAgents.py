@@ -40,7 +40,7 @@ from game import Actions
 import util
 import time
 import search
-
+from util import manhattanDistance
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
 
@@ -299,16 +299,6 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        # State is (x,y) position and how many corners are left  #
-        # ((x,y),[]) tuple of one tuple and one list             #
-        # In simple words the method is the following:           #
-        # We start from the starting point and all corners are   #
-        # not visited. The a search algorithm is performed.      #
-        # Search algorithm is expanded in many ways like a tree. #
-        # The goal is that a path is reached all the corners     #
-        # before others paths - minimum path. Is like perform    #
-        # parallel search with a specific id.                    #
-
         return (self.startingPosition,self.initialState)
 
     def isGoalState(self, state):
@@ -316,12 +306,9 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        # This path has visit all the corners #
-        for item in state[1]:
-            if item == 0: # Even if one corner is not visited
+        for item_state in state[1]:
+            if item_state == 0: 
                 return False
-
-        # All corners are visited #
         return True
 
     def getSuccessors(self, state):
@@ -391,21 +378,17 @@ def cornersHeuristic(state, problem):
 
     "*** YOUR CODE HERE ***"
 
-    from util import manhattanDistance
+    
 
-    # Goal state #
+    
     if problem.isGoalState(state):
         return 0
 
     else:
-        distancesFromGoals = [] # Calculate all distances from goals(not visited corners)
-
+        distancesFromGoals = [] # Calculate all distances from goals
         for index,item in enumerate(state[1]):
-            if item == 0: # Not visited corner
-                # Use manhattan method #
+            if item == 0: 
                 distancesFromGoals.append(manhattanDistance(state[0],corners[index]))
-
-        # Worst case. This guess should be higher than real. Pick higher distance #
         return max(distancesFromGoals)
 
 class AStarCornersAgent(SearchAgent):
