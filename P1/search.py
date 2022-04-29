@@ -75,137 +75,91 @@ def tinyMazeSearch(problem):
 
 def depthFirstSearch(problem):
     
-    Coordinate = Stack()
-
-    visited_list = [] 
-    path = [] 
-
-   
-    if problem.isGoalState(problem.getStartState()):
+    stack_nodes = Stack()                   #khoi tao stack cac node
+    start_node = problem.getStartState()    #khoi tao node dau tien
+    if problem.isGoalState(start_node): #neu vi tri bat dau la dich den thi tra ve list trong
         return []
+    visited_nodes = {}                            #vi tri da luu
+    step_cost = 0                          #chi phi
+    actions = []                            #hanh dong
+    stack_nodes.push((start_node,actions,step_cost))
+    while True:
+        current_node = stack_nodes.pop() 
 
-    
-    Coordinate.push((problem.getStartState(),[]))
-
-    while(True):
-
+        if problem.isGoalState(current_node[0]):    # neu la diem ket thuc thi tra ve hanh dong 
+            return current_node[1]
         
-        if Coordinate.isEmpty():
-            return []
-
-       
-        xy,path = Coordinate.pop() 
-        visited_list.append(xy)
-
+        if current_node[0] not in visited_nodes:          #neu node chua duoc di den thi danh dau la 1
+            visited_nodes[current_node[0]]  = 1
+            for next_node,action,cost in problem.getSuccessors(current_node[0]):
+                if  next_node not in visited_nodes:       #neu node tiep theo chua co trong stack thi them vao
+                    stack_nodes.push((next_node,current_node[1]+[action],current_node[2]+cost))
         
-        if problem.isGoalState(xy):
-            return path
-
-        
-        succ = problem.getSuccessors(xy)
-
-       
-        if succ:
-            for item in succ:
-                if item[0] not in visited_list:
-                    newPath = path + [item[1]] # Calculate new path
-                    Coordinate.push((item[0],newPath))
+        if stack_nodes.isEmpty():                   #neu stack trong thi thoat vong lap
+            break
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
 
-    
-    coordinate = Queue()
-
-    visited_list = [] 
-    path = [] 
-
-   
-    if problem.isGoalState(problem.getStartState()):
+    queue_nodes = Queue()
+    start_node = problem.getStartState()
+    if problem.isGoalState(start_node):
         return []
-
-   
-    coordinate.push((problem.getStartState(),[]))
-
-    while(True):
-
-        
-        if coordinate.isEmpty():
-            return []
-
-        
-        xy,path = coordinate.pop() 
-        visited_list.append(xy)
-
-       
+    visited_nodes = [] 
+    actions = []   
+    step_cost = 0
+    queue_nodes.push((start_node,actions,step_cost))
+    while(True):  
+        xy,actions,cost = queue_nodes.pop() 
+        visited_nodes.append(xy)   
         if problem.isGoalState(xy):
-            return path
-
-        succ = problem.getSuccessors(xy)
-
-       
+            return actions
+        succ = problem.getSuccessors(xy) # tra ve (next_node,next_action,next_step_cost)
         if succ:
             for item in succ:
-                if item[0] not in visited_list and item[0] not in (state[0] for state in coordinate.list):
-                    newPath = path + [item[1]] # Calculate new path
-                    coordinate.push((item[0],newPath))
-
+                if item[0] not in visited_nodes and item[0] not in (state[0] for state in queue_nodes.list):
+                    queue_nodes.push((item[0],actions+[item[1]],cost+item[2]))
+        if queue_nodes.isEmpty():
+            break
+   
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-
-   
-    coordinate = PriorityQueue()
-
-    visited_list = [] 
-    path = [] 
-
-   
-    if problem.isGoalState(problem.getStartState()):
-        return []
-
-                                         
-    coordinate.push((problem.getStartState(),[]),0)
+    queue_nodes = PriorityQueue()
+    start_node = problem.getStartState()
+    visited_nodes = [] 
+    actions = [] 
+    step_cost =0
+    if problem.isGoalState(start_node):
+        return []                   
+    queue_nodes.push((start_node,actions),step_cost)
 
     while(True):
-
-       
-        if coordinate.isEmpty():
-            return []
-
-       
-        xy,path = coordinate.pop() # Take position and path
-        visited_list.append(xy)
-
-    
-        if problem.isGoalState(xy):
-            return path
-
         
-        succ = problem.getSuccessors(xy)
+        current_node,actions = queue_nodes.pop() 
+        visited_nodes.append(current_node)
 
-       
+        if problem.isGoalState(current_node):
+            return actions
+
+        succ = problem.getSuccessors(current_node)
         if succ:
             for item in succ:
-                if item[0] not in visited_list and (item[0] not in (state[2][0] for state in coordinate.heap)):
-                    newPath = path + [item[1]]
-                    pri = problem.getCostOfActions(newPath)
+                if item[0] not in visited_nodes : # neu node chua duoc di qua
+                    if (item[0] not in (state[2][0] for state in queue_nodes.heap)): #neu node khong trong trang thai da luu
+                        cost = problem.getCostOfActions(actions + [item[1]])
+                        queue_nodes.push((item[0],actions + [item[1]]),cost)
 
-                    coordinate.push((item[0],newPath),pri)
-
-                
-                elif item[0] not in visited_list and (item[0] in (state[2][0] for state in coordinate.heap)):
-                    for state in coordinate.heap:
-                        if state[2][0] == item[0]:
-                            oldPri = problem.getCostOfActions(state[2][1])
-
-                    newPri = problem.getCostOfActions(path + [item[1]])
-
-                    if oldPri > newPri:
-                        newPath = path + [item[1]]
-                        coordinate.update((item[0],newPath),newPri)
-
+                    else:
+                        for state in queue_nodes.heap:
+                            if state[2][0] == item[0]:
+                                prev_cost = problem.getCostOfActions(state[2][1])
+                        next_cost = problem.getCostOfActions(actions + [item[1]])
+                        if prev_cost > next_cost:
+                            queue_nodes.update((item[0],actions + [item[1]]),next_cost)
+        if queue_nodes.isEmpty():
+            return []
 def nullHeuristic(state, problem=None):
     """
     A heuristic function estimates the cost from the current state to the nearest
@@ -239,56 +193,37 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
 
-    # queueXY: ((x,y),[path]) #
-    queueXY = MyPriorityQueueWithFunction(problem,f)
+ 
+    queue_nodes = MyPriorityQueueWithFunction(problem,f)
+    start_node = problem.getStartState()
+    actions = [] 
+    visited_node = [] 
 
-    path = [] # Every state keeps it's path from the starting state
-    visited = [] # Visited states
-
-
-    # Check if initial state is goal state #
-    if problem.isGoalState(problem.getStartState()):
+    if problem.isGoalState(start_node):
         return []
 
-    # Add initial state. Path is an empty list #
-    element = (problem.getStartState(),[])
-
-    queueXY.push(element,heuristic)
+    queue_nodes.push((start_node,actions),heuristic)
 
     while(True):
-
-        # Terminate condition: can't find solution #
-        if queueXY.isEmpty():
+        if queue_nodes.isEmpty():
             return []
+        current_node,actions = queue_nodes.pop() 
 
-        # Get informations of current state #
-        xy,path = queueXY.pop() # Take position and path
-
-        # State is already been visited. A path with lower cost has previously
-        # been found. Overpass this state
-        if xy in visited:
+        if current_node in visited_node:
             continue
 
-        visited.append(xy)
+        visited_node.append(current_node)
 
-        # Terminate condition: reach goal #
-        if problem.isGoalState(xy):
-            return path
+        if problem.isGoalState(current_node):
+            return actions
 
-        # Get successors of current state #
-        succ = problem.getSuccessors(xy)
+        succ = problem.getSuccessors(current_node)
 
-        # Add new states in queue and fix their path #
         if succ:
             for item in succ:
-                if item[0] not in visited:
-
-                    # Like previous algorithms: we should check in this point if successor
-                    # is a goal state so as to follow lectures code
-
-                    newPath = path + [item[1]] # Fix new path
-                    element = (item[0],newPath)
-                    queueXY.push(element,heuristic)
+                if item[0] not in visited_node:
+                    
+                    queue_nodes.push((item[0],actions + [item[1]]),heuristic)
 
 
 # Abbreviations
